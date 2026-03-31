@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tic Tac Toe - Multiplayer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob shape1"></div>
+        <div class="blob shape2"></div>
+    </div>
+    
+    <!-- AUTH SCREEN -->
+    <div class="container glassmorphism" id="auth-container">
+        <header>
+            <h1>Tic Tac Toe</h1>
+            <p class="subtitle">Real-time Multiplayer Edition</p>
+        </header>
+        <div class="auth-tabs">
+            <button id="tab-login" class="tab active">Login</button>
+            <button id="tab-register" class="tab">Register</button>
+        </div>
+        <div id="auth-form" class="auth-form">
+            <input type="text" id="username" placeholder="Username" autocomplete="off" />
+            <input type="password" id="password" placeholder="Password" />
+            <button id="auth-submit" class="btn full-w">Log In</button>
+            <div id="auth-error" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- LOBBY SCREEN -->
+    <div class="container glassmorphism hidden" id="lobby-container">
+        <header>
+            <h1>Lobby</h1>
+            <p class="subtitle">Welcome, <strong id="user-display"></strong>!</p>
+        </header>
+        <button id="play-ai-btn" class="btn full-w main-action">Play AI (Depth 6)</button>
+        
+        <div class="users-section">
+            <h3 style="margin-top: 20px; margin-bottom: 10px; font-weight: 600;">Players Online</h3>
+            <div id="active-users-list" class="users-list">
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <button id="logout-btn" class="btn danger full-w mt-2">Logout</button>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div class="container glassmorphism hidden" id="game-container">
+        <header>
+            <h1 id="match-title">Loading Match...</h1>
+            <p class="subtitle">Moving Window Variant</p>
+        </header>
+        
+        <div class="timer-container" id="timer-wrapper">
+             <div class="timer-bar" id="timer-bar"></div>
+        </div>
+
+        <div class="status-panel">
+            <div id="status-text" class="status-text">Waiting to start...</div>
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div> <span id="loading-txt">Thinking...</span>
+            </div>
+        </div>
+
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div class="controls">
+            <button id="quit-btn" class="btn danger full-w">Resign & Leave</button>
+        </div>
+    </div>
+
+    <!-- INCOMING CHALLENGE OVERLAY -->
+    <div class="modal-overlay hidden" id="challenge-modal">
+        <div class="modal glassmorphism">
+            <h2>Challenge Received!</h2>
+            <p><strong id="challenger-name">Someone</strong> wants to play.</p>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button id="accept-challenge-btn" class="btn full-w">Accept</button>
+                <button id="decline-challenge-btn" class="btn danger full-w">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
