@@ -23,5 +23,4 @@ Visit `http://localhost:5000`.
 ## Documentation
 Check the `analysis/` folder for detailed system architecture, flow diagrams, and AI logic mechanics.
 
-## Screenshots
-> [Placeholder for Screenshots: Drop your images here after deploying]
+
