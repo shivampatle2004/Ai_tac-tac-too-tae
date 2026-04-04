@@ -9,12 +9,17 @@ const lobbyScreen = document.getElementById('lobby-container');
 const gameScreen = document.getElementById('game-container');
 const challengeModal = document.getElementById('challenge-modal');
 
+console.log("Tic Tac Toe Script Loaded");
+
 // Init Sequence
 checkAuth();
 
 function checkAuth() {
     fetch('/api/me')
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("Not logged in");
+            return res.json();
+        })
         .then(data => {
             if (data.username) {
                 currentUser = data.username;
@@ -24,6 +29,10 @@ function checkAuth() {
             } else {
                 showScreen('auth');
             }
+        })
+        .catch(err => {
+            console.log("Auth Check:", err.message);
+            showScreen('auth');
         });
 }
 
