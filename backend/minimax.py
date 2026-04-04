@@ -47,23 +47,30 @@ def evaluate(board):
 def get_possible_moves(board):
     return [i for i, spot in enumerate(board) if spot == '']
 
-def simulate_move(board, moves_queue, index, mark):
+def simulate_move(board, moves_queue, pending_removal, index, mark):
     new_board = list(board)
     new_queue = list(moves_queue)
     
+    # 1. Remove pending first (start of turn)
+    if pending_removal is not None:
+        new_board[pending_removal] = ''
+    
+    # 2. Place new
     new_board[index] = mark
     new_queue.append(index)
     
+    # 3. Check win (with potentially 4 on board)
     if check_win(new_board, mark):
-        return new_board, new_queue, True
+        return new_board, new_queue, None, True
         
+    # 4. If no win, flag oldest for NEXT turn
+    new_pending = None
     if len(new_queue) > 3:
-        removed = new_queue.pop(0)
-        new_board[removed] = ''
+        new_pending = new_queue.pop(0)
         
-    return new_board, new_queue, False
+    return new_board, new_queue, new_pending, False
 
-def minimax(board, ai_moves, player_moves, depth, alpha, beta, is_maximizing):
+def minimax(board, ai_moves, player_moves, pending_ai, pending_player, depth, alpha, beta, is_maximizing):
     if depth == 0:
         return evaluate(board)
         
@@ -74,11 +81,12 @@ def minimax(board, ai_moves, player_moves, depth, alpha, beta, is_maximizing):
     if is_maximizing:
         best_score = -math.inf
         for move in possible_moves:
-            new_board, new_ai_moves, is_win = simulate_move(board, ai_moves, move, 'O')
+            # AI turn starts: remove pending_ai
+            new_board, new_ai_moves, new_pending_ai, is_win = simulate_move(board, ai_moves, pending_ai, move, 'O')
             if is_win:
-                return 100 + depth  # Early win string is highly valued
+                return 100 + depth
             
-            score = minimax(new_board, new_ai_moves, player_moves, depth - 1, alpha, beta, False)
+            score = minimax(new_board, new_ai_moves, player_moves, new_pending_ai, pending_player, depth - 1, alpha, beta, False)
             best_score = max(score, best_score)
             alpha = max(alpha, score)
             if beta <= alpha:
@@ -87,18 +95,19 @@ def minimax(board, ai_moves, player_moves, depth, alpha, beta, is_maximizing):
     else:
         best_score = math.inf
         for move in possible_moves:
-            new_board, new_player_moves, is_win = simulate_move(board, player_moves, move, 'X')
+            # Player turn starts: remove pending_player
+            new_board, new_player_moves, new_pending_player, is_win = simulate_move(board, player_moves, pending_player, move, 'X')
             if is_win:
-                return -100 - depth # Early loss string is worst penalty
+                return -100 - depth
             
-            score = minimax(new_board, ai_moves, new_player_moves, depth - 1, alpha, beta, True)
+            score = minimax(new_board, ai_moves, new_player_moves, pending_ai, new_pending_player, depth - 1, alpha, beta, True)
             best_score = min(score, best_score)
             beta = min(beta, score)
             if beta <= alpha:
                 break
         return best_score
 
-def get_best_move(board, ai_moves, player_moves, max_depth=6):
+def get_best_move(board, ai_moves, player_moves, pending_ai=None, pending_player=None, max_depth=6):
     best_score = -math.inf
     best_move = None
     alpha = -math.inf
@@ -106,16 +115,15 @@ def get_best_move(board, ai_moves, player_moves, max_depth=6):
     
     possible_moves = get_possible_moves(board)
     
-    # Random fallback if empty board, though won't happen for AI normally (it plays 2nd)
     if len(possible_moves) == 9: 
         return 4
     
     for move in possible_moves:
-        new_board, new_ai_moves, is_win = simulate_move(board, ai_moves, move, 'O')
+        new_board, new_ai_moves, new_pending_ai, is_win = simulate_move(board, ai_moves, pending_ai, move, 'O')
         if is_win:
             return move
         
-        score = minimax(new_board, new_ai_moves, player_moves, max_depth - 1, alpha, beta, False)
+        score = minimax(new_board, new_ai_moves, player_moves, new_pending_ai, pending_player, max_depth - 1, alpha, beta, False)
         
         if score > best_score:
             best_score = score

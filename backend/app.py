@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from models import db, User
-from game_engine import GameEngine
-from minimax import get_best_move
+from backend.models import db, User
+from backend.game_engine import GameEngine
+from backend.minimax import get_best_move
 import os
 import uuid
 import time
@@ -42,6 +42,10 @@ with app.app_context():
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
+@app.route('/healthz')
+def health_check():
+    return jsonify({'status': 'healthy'}), 200
 
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -176,7 +180,13 @@ def handle_move(data):
         time.sleep(0.8)
         # Verify no timeout occurred during sleep
         if not game.check_timeout():
-            ai_index = get_best_move(game.board, game.player_moves_o, game.player_moves_x, max_depth=6)
+            # Sudden Death: After 25 moves, reduce AI depth to make it beatable
+            depth = 2 if (len(game.player_moves_x) + len(game.player_moves_o)) >= 25 else 6
+            
+            ai_index = get_best_move(game.board, game.player_moves_o, game.player_moves_x, 
+                                     pending_ai=game.pending_removal_o, 
+                                     pending_player=game.pending_removal_x,
+                                     max_depth=depth)
             game.make_move(ai_index, 'AI')
             socketio.emit('game_update', game.get_state(), room=match_id)
 

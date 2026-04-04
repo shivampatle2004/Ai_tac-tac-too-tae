@@ -175,6 +175,16 @@ cells.forEach(cell => {
 });
 
 function renderBoard() {
+    // Move count & Sudden Death Alert
+    const moveCounter = document.getElementById('move-counter');
+    moveCounter.textContent = `Moves: ${currentMatchState.move_count}`;
+    if (currentMatchState.move_count >= 20) {
+        moveCounter.textContent += " | SUDDEN DEATH!";
+        moveCounter.style.color = "var(--secondary)";
+    } else {
+        moveCounter.style.color = "var(--text-dim)";
+    }
+
     // Top text indicator
     if (currentMatchState.game_over) {
         statusText.classList.remove('hidden');
@@ -200,15 +210,25 @@ function renderBoard() {
     cells.forEach((cell, i) => {
         const val = currentMatchState.board[i];
         cell.className = "cell"; // reset
-        if (val === 'X') { cell.textContent = 'X'; cell.classList.add('x'); }
-        else if (val === 'O') { cell.textContent = 'O'; cell.classList.add('o'); }
-        else { cell.textContent = ''; }
-
-        // Fading indication for moving window
-        if (!currentMatchState.game_over && currentMatchState.next_to_remove) {
-            if (val === 'X' && currentMatchState.next_to_remove.X === i) cell.classList.add('fading');
-            if (val === 'O' && currentMatchState.next_to_remove.O === i) cell.classList.add('fading');
+        if (val === 'X') { 
+            cell.textContent = 'X'; 
+            cell.classList.add('x'); 
+            // Determine Age
+            const idx = currentMatchState.moves_x.indexOf(i);
+            if (i === currentMatchState.pending_removal_x) cell.classList.add('fading');
+            else if (idx === currentMatchState.moves_x.length - 1) cell.classList.add('vibrant');
+            else cell.classList.add('aged');
         }
+        else if (val === 'O') { 
+            cell.textContent = 'O'; 
+            cell.classList.add('o'); 
+            // Determine Age
+            const idx = currentMatchState.moves_o.indexOf(i);
+            if (i === currentMatchState.pending_removal_o) cell.classList.add('fading');
+            else if (idx === currentMatchState.moves_o.length - 1) cell.classList.add('vibrant');
+            else cell.classList.add('aged');
+        }
+        else { cell.textContent = ''; }
     });
 }
 

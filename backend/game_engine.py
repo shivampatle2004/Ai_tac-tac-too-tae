@@ -11,6 +11,8 @@ class GameEngine:
         self.board = [''] * 9
         self.player_moves_x = []
         self.player_moves_o = []
+        self.pending_removal_x = None
+        self.pending_removal_o = None
         self.current_turn = 'X'
         self.winner = None
         self.game_over = False
@@ -44,23 +46,39 @@ class GameEngine:
             
         if index < 0 or index > 8 or self.board[index] != '':
             return False, "Invalid location", None
-            
+
         mark = self.current_turn
         moves_queue = self.player_moves_x if mark == 'X' else self.player_moves_o
         
+        # --- NEW DEFERRED REMOVAL LOGIC ---
+        # 1. Remove the pending piece at the START of the turn
+        removed_index = None
+        if mark == 'X' and self.pending_removal_x is not None:
+            removed_index = self.pending_removal_x
+            self.board[removed_index] = ''
+            self.pending_removal_x = None
+        elif mark == 'O' and self.pending_removal_o is not None:
+            removed_index = self.pending_removal_o
+            self.board[removed_index] = ''
+            self.pending_removal_o = None
+
+        # 2. Place the new mark
         self.board[index] = mark
         moves_queue.append(index)
         
-        removed_index = None
-        
+        # 3. Check for win (with potentially 4 marks on board during this turn)
         if self.check_win(mark):
             self.winner = mark
             self.game_over = True
             return True, "Win", removed_index
             
+        # 4. If no win, check if we need to flag the oldest for next turn removal
         if len(moves_queue) > 3:
-            removed_index = moves_queue.pop(0)
-            self.board[removed_index] = ''
+            oldest = moves_queue.pop(0)
+            if mark == 'X':
+                self.pending_removal_x = oldest
+            else:
+                self.pending_removal_o = oldest
             
         self.current_turn = 'O' if mark == 'X' else 'X'
         self.last_move_time = time.time()
@@ -85,9 +103,14 @@ class GameEngine:
             'current_turn': self.current_turn,
             'winner': self.winner,
             'game_over': self.game_over,
+            'move_count': len(self.player_moves_x) + len(self.player_moves_o),
             'time_left': max(0, int(11 - (time.time() - self.last_move_time))),
+            'moves_x': self.player_moves_x,
+            'moves_o': self.player_moves_o,
+            'pending_removal_x': self.pending_removal_x,
+            'pending_removal_o': self.pending_removal_o,
             'next_to_remove': {
-                'X': self.player_moves_x[0] if len(self.player_moves_x) == 3 else None,
-                'O': self.player_moves_o[0] if len(self.player_moves_o) == 3 else None
+                'X': self.pending_removal_x,
+                'O': self.pending_removal_o
             }
         }
