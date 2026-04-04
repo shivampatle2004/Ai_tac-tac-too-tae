@@ -1,9 +1,13 @@
+import os
+import sys
+# Add the project root (parent directory of 'backend') to the path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from flask import Flask, request, jsonify, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from backend.models import db, User
 from backend.game_engine import GameEngine
 from backend.minimax import get_best_move
-import os
 import uuid
 import time
 from dotenv import load_dotenv
